@@ -1,0 +1,123 @@
+<PRD>
+Overview
+
+Austin’s social calendar is overwhelming, especially for people who don’t have time to sift through Do512, newsletters, and group chats just to land on a plan that fits their schedule. This web app gives each user a personalized shortlist of Austin-area events that match their interests and their actual free time.
+
+Who it’s for – Busy professionals, recent transplants, and social explorers who want quality over quantity.
+Value – Saves hours of manual searching, reduces FOMO, and makes it easy to act on a plan (“book tickets now”) instead of browsing endless lists.
+Core Features
+
+1. Account & Plain-Language Preferences
+What it does – Users sign in with Google, then type a free-text blurb like “love live music, foodie pop-ups, and quirky festivals.”
+Why it matters – Natural language lowers friction; richer input boosts recommendation precision.
+How it works – Text is embedded and stored as vectors alongside structured tags. Users can edit at any time or teach the system via thumbs-up/down.
+2. Google Calendar Integration (MVP)
+What it does – Reads free/busy blocks so suggested events never overlap mandatory commitments.
+Why it matters – Relevance plummets if a “perfect” show clashes with a work meeting.
+How it works – OAuth 2.0 (read-only free/busy scope). Tokens stored encrypted.
+3. Event Ingestion & Metadata Pipeline
+What it does – Continuously pulls events from Do512, Eventbrite, city listings, and other public feeds.
+Why it matters – A robust catalog is the substrate for good recommendations.
+How it works – Python scrapers or official APIs normalize into a common schema (title, start/end, cost, address, neighborhood, description, source URL, tags). De-duplication + geocoding at ingest.
+4. Recommendation Engine
+What it does – Ranks events for each user based on interest match, availability, distance, and cost.
+Why it matters – Surfaces 5–10 “best” options instead of 300 entries.
+How it works – Hybrid score combining vector similarity (preferences ↔ description/tags) and rule-based filters (date, price ceiling, radius).
+5. Conversational AI Interface
+What it does – A chat widget answers questions (“Anything under $30 tomorrow night?”), explains why an event fits, and updates preference weights on the fly.
+Why it matters – Natural back-and-forth feels personal and accelerates discovery.
+How it works – GPT-4o with function-calling to query the events API, adjust filters, and append ticket-purchase deep-links when available.
+6. Ticket-Purchase & Share
+What it does – “Buy tickets” or “Open event page” buttons inside list cards and chat replies; quick share link for friends.
+Why it matters – Converts intention into action; future revenue opportunities via affiliate links.
+How it works – Outbound deep-link to official vendor (no in-house payment in MVP).
+7. Feedback Loop
+What it does – Save, thumbs-up, or thumbs-down events; system learns and future lists improve.
+Why it matters – Personalization compounds over time.
+How it works – Simple weight adjustment algorithm stored per user; periodic batch retraining available.
+User Experience
+
+Personas
+Ben the Busy Newcomer – Needs instant “what’s good tonight” suggestions.
+Sam the Seasoned Local – Wants niche recommendations he hasn’t already heard about.
+Priya the Planner-Friend – Organizes outings, filters by price and group size.
+Key Flows
+Onboarding – Google sign-in → type interests → connect calendar → get first list.
+Discovery – Browse curated cards → open details → deep-link to tickets → save or dismiss.
+Chat – Refine requests in natural language, e.g., “What’s happening in East Austin Saturday afternoon?”
+Feedback – Save or thumb-down to train the model.
+UI/UX Considerations
+Vibrant, playful Austin vibe (bright accent colors, fun icons).
+Card grid with neighborhood badge, cost pill, and add-to-calendar icon.
+Responsive mobile-first design; accessible color contrast and readable fonts.
+Persistent chat bubble bottom-right, sliding panel on open.
+Technical Architecture
+
+Frontend – Next.js + React, TailwindCSS, PWA manifest (for future offline/push if desired).
+Backend APIs
+Auth & User Service – Google OAuth, JWT sessions.
+Event Service – CRUD + search endpoint backed by Postgres + PostGIS + pgvector.
+Recommendation Service – FastAPI; retrieves candidate events, scores, returns ranked list.
+Chat Orchestrator – Node/Express that proxies GPT-4o calls with function-calling.
+Data Pipeline – Cloud Run scraping workers on a schedule, Pub/Sub queue, Cloud Functions for post-processing.
+Storage – Cloud SQL (Postgres 16) for relational data; GCS for scraper logs.
+Observability – Cloud Logging, Error Reporting; basic Prometheus exporter for metrics.
+Security – Least-privilege service accounts; secrets in Secret Manager; encrypted tokens.
+No special compliance beyond standard consumer privacy.
+Development Roadmap
+
+Phase 0 – Foundation
+Repo, CI/CD, infrastructure-as-code (Terraform), auth scaffold, base UI shell.
+Phase 1 – MVP (Usable Prototype)
+Google sign-in + text-based preference capture.
+Minimal Postgres schema and admin panel.
+Manual import of a Do512 CSV to seed events.
+Basic list UI with calendar-conflict filter.
+Stateless chat stub that returns list items via keyword match.
+Phase 2 – Automated Ingestion & Recommendation
+Scraper jobs for Do512 + Eventbrite → normalized pipeline.
+Embedding-based interest matching + rule filters.
+Real GPT-4o chat interface with function-calling.
+Ticket deep-link buttons.
+Save/thumb feedback loop.
+Phase 3 – Polish & Growth
+Additional sources (city calendar, ACL Radio, Meetup).
+Advanced filters (distance radius, kid-friendly, wheelchair access).
+Admin dashboard for scraper health.
+Early monetization hooks: affiliate parameters on ticket links.
+(Push notifications and multi-calendar support left for future phases.)
+Logical Dependency Chain
+
+Auth & Preferences
+Event Schema & Storage
+Basic Event Ingest
+List Rendering UI – delivers first visible value
+Calendar Conflict Filter
+Embedding & Recommendation Logic
+Chat Interface
+Ticket Deep-Links & Feedback Learning
+Additional Sources & Admin Tools
+Each step is atomic and expands directly on the previous layer.
+
+Risks and Mitigations
+
+Scraper Breakage – Build modular adapters; monitor errors; cache historical data to soften outages.
+Cold-start Personalization – Provide “Top Picks Around Austin” fallback; encourage quick thumbs-up/down to accelerate learning.
+Model Relevance Drift – Regularly evaluate recommendations with test users; allow manual tag tweaking.
+Scope Creep – Roadmap phases enforce boundaries; features beyond MVP enter backlog.
+Small-team Resource Limits – Leverage managed GCP services (Cloud Run, Cloud SQL) to avoid ops overhead.
+Appendix
+
+Tech references – Google Calendar free/busy API, OpenAI function-calling docs, pgvector similarity search pattern.
+Dataset snapshot (June 2025) – Do512 averages 1.2 k live events; 48 % music, 22 % food/drink, 15 % festivals, remainder misc.
+Future monetization notes – Potential: premium “concierge” tier, affiliate ticket revenue, sponsored event slots.
+# Deployment & Infrastructure
+
+- **Frontend**: Hosted and deployed on Vercel (https://vercel.com/)
+- **Backend/API/Scraper**: Hosted and deployed on Render (https://render.com/)
+- **Database**: Managed Postgres instance on Render
+
+# Notes
+- Remove all references to GCP services (Cloud Run, Cloud SQL, etc.)
+- Update any CI/CD, environment, or architecture notes to match this new stack
+</PRD>
