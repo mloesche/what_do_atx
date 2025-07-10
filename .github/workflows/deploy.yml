@@ -2,88 +2,29 @@ name: Deploy to Vercel and Render
 
 on:
   push:
-    branches: [main, staging]
-  pull_request:
     branches: [main]
 
-env:
-  NODE_VERSION: '18'
-
 jobs:
-  # Basic test to ensure workflow starts
-  test-basic:
+  test:
     runs-on: ubuntu-latest
-    name: Basic Test
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '18'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Basic build test
-        run: npm run build
-
-      - name: Check secrets availability
+      
+      - name: Install and build
         run: |
-          echo "Checking deployment secrets..."
-          echo "VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' && 'available' || 'missing' }}"
-          echo "RENDER_API_KEY: ${{ secrets.RENDER_API_KEY != '' && 'available' || 'missing' }}"
-          echo "✅ Basic workflow is working!"
-
-  # Only run if we're on main and have secrets
-  deploy-vercel:
-    runs-on: ubuntu-latest
-    needs: test-basic
-    if: github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != ''
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./
-          vercel-args: '--prod'
-
-  # Only run if we're on main and have secrets
-  deploy-render:
-    runs-on: ubuntu-latest
-    needs: test-basic
-    if: github.ref == 'refs/heads/main' && secrets.RENDER_API_KEY != ''
-    
-    steps:
-      - name: Deploy to Render
+          npm ci
+          npm run build
+      
+      - name: Show status
         run: |
-          echo "🚀 Deploying to Render..."
-          echo "Service ID: ${{ secrets.RENDER_SERVICE_ID != '' && 'configured' || 'missing' }}"
-          echo "Would deploy here if Render service was created"
-
-  # Informational job that always runs on main
-  deployment-status:
-    runs-on: ubuntu-latest
-    needs: [test-basic]
-    if: always() && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Show deployment status
-        run: |
-          echo "🔍 Deployment Status Summary:"
-          echo "Branch: ${{ github.ref }}"
-          echo "Commit: ${{ github.sha }}"
-          echo ""
-          echo "Frontend (Vercel): ${{ secrets.VERCEL_TOKEN != '' && '✅ Ready' || '⚠️ Missing secrets' }}"
-          echo "Backend (Render): ${{ secrets.RENDER_API_KEY != '' && '✅ Ready' || '⚠️ Missing secrets' }}"
-          echo ""
-          echo "📚 Setup guide: docs/DEPLOYMENT_SETUP_QUICKSTART.md" 
+          echo "✅ Build successful!"
+          echo "🔍 Checking secrets..."
+          echo "VERCEL_TOKEN available: ${{ secrets.VERCEL_TOKEN != '' }}"
+          echo "RENDER_API_KEY available: ${{ secrets.RENDER_API_KEY != '' }}" 
