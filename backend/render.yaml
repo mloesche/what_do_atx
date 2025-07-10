@@ -1,11 +1,10 @@
 services:
-  # Main API Service
+  # Main API Service (Dockerized)
   - type: web
     name: what-do-atx-api
-    env: node
+    env: docker
     plan: starter
-    buildCommand: npm ci
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
