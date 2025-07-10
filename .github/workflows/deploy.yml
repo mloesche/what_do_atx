@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
     
     steps:
@@ -22,9 +22,63 @@ jobs:
           npm ci
           npm run build
       
-      - name: Show status
+      - name: Show build status
+        run: echo "✅ Build completed successfully!"
+
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel (if configured)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          echo "✅ Build successful!"
-          echo "🔍 Checking secrets..."
-          echo "VERCEL_TOKEN available: ${{ secrets.VERCEL_TOKEN != '' }}"
-          echo "RENDER_API_KEY available: ${{ secrets.RENDER_API_KEY != '' }}" 
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "🚀 Deploying to Vercel..."
+            npx vercel --token $VERCEL_TOKEN --prod --yes
+          else
+            echo "⚠️ Skipping Vercel deployment - missing secrets"
+            echo "Add VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID to deploy"
+          fi
+
+  deploy-render:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Deploy to Render (if configured)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          if [ -n "$RENDER_API_KEY" ] && [ -n "$RENDER_SERVICE_ID" ]; then
+            echo "🚀 Deploying to Render..."
+            curl -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+              -H "Authorization: Bearer $RENDER_API_KEY" \
+              -H "Content-Type: application/json"
+          else
+            echo "⚠️ Skipping Render deployment - missing secrets"
+            echo "Add RENDER_API_KEY and RENDER_SERVICE_ID to deploy"
+          fi
+
+  deployment-summary:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, deploy-vercel, deploy-render]
+    if: always() && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Show deployment summary
+        run: |
+          echo "🔍 Deployment Summary:"
+          echo "Build: ${{ needs.build-and-test.result }}"
+          echo "Vercel: ${{ needs.deploy-vercel.result }}"
+          echo "Render: ${{ needs.deploy-render.result }}"
+          echo ""
+          echo "📚 Setup guide: docs/DEPLOYMENT_SETUP_QUICKSTART.md" 
