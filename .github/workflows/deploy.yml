@@ -128,8 +128,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Vercel
-        if: ${{ secrets.VERCEL_TOKEN && secrets.VERCEL_ORG_ID && secrets.VERCEL_PROJECT_ID }}
+      - name: Deploy to Vercel  
+        if: secrets.VERCEL_TOKEN != null && secrets.VERCEL_ORG_ID != null && secrets.VERCEL_PROJECT_ID != null
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -139,7 +139,7 @@ jobs:
           vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
 
       - name: Skip Vercel deployment (missing secrets)
-        if: ${{ !secrets.VERCEL_TOKEN || !secrets.VERCEL_ORG_ID || !secrets.VERCEL_PROJECT_ID }}
+        if: secrets.VERCEL_TOKEN == null || secrets.VERCEL_ORG_ID == null || secrets.VERCEL_PROJECT_ID == null
         run: |
           echo "⚠️ Skipping Vercel deployment - missing required secrets:"
           echo "  - VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN && 'set' || 'missing' }}"
