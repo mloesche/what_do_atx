@@ -53,6 +53,7 @@ what_do_atx/
 
 Our documentation covers everything you need:
 
+- **[⚡ Deployment Quickstart](docs/DEPLOYMENT_SETUP_QUICKSTART.md)** - Fix CI/CD issues fast
 - **[🚀 Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Complete Vercel + Render deployment
 - **[⚙️ Environment Setup](docs/ENVIRONMENT_SETUP.md)** - Environment variables configuration  
 - **[🐳 Docker Setup](docs/DOCKER_SETUP.md)** - Local development with Docker
