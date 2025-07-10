@@ -1,0 +1,49 @@
+services:
+  # Main API Service
+  - type: web
+    name: what-do-atx-api
+    env: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: what-do-atx-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://what-do-atx.vercel.app
+    autoDeploy: true
+    branch: main
+    rootDir: ./backend
+
+databases:
+  # Managed PostgreSQL with extensions
+  - name: what-do-atx-db
+    databaseName: what_do_atx
+    user: what_do_atx_user
+    plan: starter
+    postgresMajorVersion: 15
+    # Note: Extensions like PostGIS and pgvector need to be enabled via Render dashboard
+    # or database migrations after deployment
+
+# Additional configuration notes:
+# 1. After deployment, enable required extensions via Render dashboard:
+#    - CREATE EXTENSION IF NOT EXISTS postgis;
+#    - CREATE EXTENSION IF NOT EXISTS vector;
+# 2. Set additional environment variables in Render dashboard:
+#    - OPENAI_API_KEY (for embeddings)
+#    - GOOGLE_OAUTH_CLIENT_ID
+#    - GOOGLE_OAUTH_CLIENT_SECRET
+#    - EVENTBRITE_API_KEY
+# 3. Configure custom domain if needed
+# 4. Set up monitoring and alerting 
